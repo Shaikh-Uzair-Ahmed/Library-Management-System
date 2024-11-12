@@ -1,0 +1,38 @@
+{% extends "libraryweb/base.html" %}
+
+{% block title %}{{ bookdetail.title }} - Book Details{% endblock %}
+
+{% block content %}
+<section class="my-8 max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <!-- Book Cover and Title -->
+    <div class="flex flex-col items-center">
+        <img src="{{ bookdetail.cover_url }}" alt="{{ bookdetail.title }}" class="w-48 h-auto rounded-md shadow-md mb-4">
+        <h1 class="text-3xl font-bold text-blue-700 text-center">{{ bookdetail.title }}</h1>
+        <p class="text-gray-500 text-lg">{{ bookdetail.author }}</p>
+    </div>
+
+    <!-- Book Information -->
+    <div class="mt-6 space-y-4">
+        <div class="flex justify-between items-center">
+            <p class="text-gray-600 font-medium">Genre:</p>
+            <p class="text-gray-800">{{ bookdetail.genre }}</p>
+        </div>
+        <div class="flex justify-between items-center">
+            <p class="text-gray-600 font-medium">ISBN:</p>
+            <p class="text-gray-800">{{ bookdetail.isbn }}</p>
+        </div>
+        <div class="flex justify-between items-center">
+            <p class="text-gray-600 font-medium">Total Number of Copies:</p>
+            <p class="text-gray-800">{{ bookdetail.total_books }}</p>
+        </div>
+        <div class="flex justify-between items-center">
+            <p class="text-gray-600 font-medium">Books Borrowed:</p>
+            <p class="text-gray-800">{{ bookdetail.borrowed_books }}</p>
+        </div>
+        <div class="flex justify-between items-center">
+            <p class="text-gray-600 font-medium">Books Available:</p>
+            <p class="text-gray-800">{{ bookdetail.available_books }}</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

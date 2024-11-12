@@ -1,0 +1,44 @@
+{% extends "libraryweb/base.html" %}
+{% load static %}
+
+{% block title %}Notifications - Library Management System{% endblock %}
+
+{% block css %}<link href="{% static 'css/notifications.css' %}" rel="stylesheet">{% endblock css %}
+
+{% block content %}
+
+
+
+<div class="container mx-auto my-8 p-4">
+    <h2 class="text-2xl font-bold text-blue-600 mb-4">
+        Notifications (<span id="notification-counter">2</span>)
+    </h2>
+    
+    <div class="notification-list space-y-4">
+        <!-- Example Notification Item with a Checkbox -->
+        <div class="notification-card border border-gray-200 rounded-lg shadow-sm p-4 flex items-start">
+            <input type="checkbox" class="notification-checkbox mr-3" onclick="updateCounter()">
+            <div>
+                <p class="text-gray-700 font-medium">New Book Added: "The Great Gatsby"</p>
+                <p class="text-gray-500 text-sm mt-1">The book "The Great Gatsby" is now available in the library.</p>
+                <p class="text-gray-400 text-xs mt-2">2 hours ago</p>
+            </div>
+        </div>
+        
+        <div class="notification-card border border-gray-200 rounded-lg shadow-sm p-4 flex items-start">
+            <input type="checkbox" class="notification-checkbox mr-3" onclick="updateCounter()">
+            <div>
+                <p class="text-gray-700 font-medium">Reminder: Book Due Tomorrow</p>
+                <p class="text-gray-500 text-sm mt-1">Your borrowed book "1984" is due tomorrow. Please return it on time.</p>
+                <p class="text-gray-400 text-xs mt-2">1 day ago</p>
+            </div>
+        </div>
+        
+        <!-- Add more notifications as needed -->
+    </div>
+</div>
+<!--<script>
+    const csrftoken = "{{ csrf_token }}";
+</script>-->
+<script src="{% static 'js/notifications.js' %}"></script>
+{% endblock %}
