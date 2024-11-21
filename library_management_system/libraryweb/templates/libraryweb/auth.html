@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Account{% endblock %}</title>
+    <title>{% block title %}Authentication{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen text-gray-800">
-    <div class="w-full max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-        {% block content %}{% endblock %}
-    </div>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <main class="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
+        {% block content %}
+        {% endblock content %}
+    </main>
+
 </body>
 </html>

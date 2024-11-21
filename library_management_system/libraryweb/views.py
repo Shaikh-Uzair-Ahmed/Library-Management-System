@@ -1,7 +1,9 @@
 from django.shortcuts import render,redirect
+from django.http import Http404
 from django.views.generic import ListView,DetailView,FormView,TemplateView
 from django.urls import reverse
 from .forms import BookRequestForm
+from django.http import HttpResponseServerError
 
 #from django.utils.decorators import method_decorator
 #from django.views.decorators.csrf import csrf_exempt
@@ -190,4 +192,24 @@ class BookRequestView(FormView):
 class CreditsView(TemplateView):
     template_name="libraryweb/main/credits.html"   
 
+class SignInView(TemplateView):
+    template_name = 'libraryweb/auth/signin.html'
+
+
+class SignUpView(TemplateView):
+    template_name = 'libraryweb/auth/signup.html'
+
+
+class ForgotPasswordView(TemplateView):
+    template_name = 'libraryweb/auth/forgot_password.html'
+
+def test_500(request):
+    raise Exception("This is a test 500 error.")
+
+    
+def error_404(request, exception=None):
+    return render(request,'libraryweb/error404.html', status=404)
+
+def error_500(request):
+    return render(request,'libraryweb/error500.html', status=500)
 
