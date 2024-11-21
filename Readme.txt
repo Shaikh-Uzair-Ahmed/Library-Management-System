@@ -48,7 +48,12 @@ sucess page and accepts data (database will be done later)
 
 18.Created a simple credits page
 
+19.Created non functional signup signin and forgot password page 
+
+20.Created custom error page that only works when Debug is False in settings
+
+
 Tasks left
-1. Profile page
+1. Database connection
 2. Admin page
-3. Login Page
+3. Making it run on domain i.e. deploying the website

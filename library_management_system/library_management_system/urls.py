@@ -17,9 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 
+handler404 = 'libraryweb.views.error_404'
+handler500 = 'libraryweb.views.error_500'
+
+
 urlpatterns = [
     path('Admin/', admin.site.urls),
-    path('Library/', include('libraryweb.urls',namespace='libraryweb'))
+    path('Library/', include('libraryweb.urls',namespace='libraryweb'),
+    )
     #connected to urls.py of libraryweb app in webpage it will be accessed through library/<webpage-name>
 ]
 

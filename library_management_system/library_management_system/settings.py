@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-hm!kj&*$)f4yg%@znlr+luga^m9eg8kk*8e3#+0&kb9ei0ghhd
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
 
 # Application definition
@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'libraryweb', #libraryweb.apps.LibrarywebConfig if we have changes in Config other than default
+    'libraryweb.apps.LibrarywebConfig', #libraryweb.apps.LibrarywebConfig if we have changes in Config other than default
 ]
 
 MIDDLEWARE = [
@@ -56,7 +56,7 @@ ROOT_URLCONF = 'library_management_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
