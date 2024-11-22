@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+from django.shortcuts import redirect
 
 handler404 = 'libraryweb.views.error_404'
 handler500 = 'libraryweb.views.error_500'
@@ -23,6 +24,8 @@ handler500 = 'libraryweb.views.error_500'
 
 urlpatterns = [
     path('Admin/', admin.site.urls),
+    path("", lambda request: redirect("libraryweb:signin")),
+    path("Library/", lambda request: redirect("libraryweb:signin")),
     path('Library/', include('libraryweb.urls',namespace='libraryweb'),
     )
     #connected to urls.py of libraryweb app in webpage it will be accessed through library/<webpage-name>
