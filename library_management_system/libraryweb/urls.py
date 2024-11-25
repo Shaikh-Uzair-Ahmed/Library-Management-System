@@ -9,15 +9,15 @@ app_name = 'libraryweb'
 urlpatterns = [
     path('Signin/', views.SignInView.as_view(), name='signin'),
     path('Signup/', views.SignUpView.as_view(), name='signup'),
-    path('Forgotpassword/', views.ForgotPasswordView.as_view(), name='forgot-password'),
-    path('Home/',views.Home_Page,name='home'),
-    path('Notifications/',views.Notification,name='notifications'),
-    path('Request/', views.BookRequestView.as_view(), name='request'),  
-    path('Success/', views.RequestSuccessView.as_view(), name='success'),  #Order of url paths matter
-    path('Search/', views.SearchPageView.as_view(), name='search'),
-    path('Credits/', views.CreditsView.as_view(), name='credits'),
-    path('Test500/', views.test_500),
-    path('<str:isbn>/', views.DetailPage.as_view(), name="detail"),
+    path('Signout/', views.sign_out, name='signout'),
+    path('Resetpassword/', views.reset_password, name='verify_user'),
+    path('<str:lib_num>/Notifications/',views.Notification,name='notifications'),
+    path('<str:lib_num>/Request/', views.BookRequestView.as_view(), name='request'),  
+    path('<str:lib_num>/Success/', views.RequestSuccessView.as_view(), name='success'),  #Order of url paths matter
+    path('<str:lib_num>/Search/', views.SearchPageView.as_view(), name='search'),
+    path('<str:lib_num>/Credits/', views.CreditsView.as_view(), name='credits'),
+    path('<str:lib_num>/Home/',views.Home_Page,name='home'),
+    path('<str:lib_num>/<str:isbn>/', views.DetailPage.as_view(), name="detail"),
     
 ]
 

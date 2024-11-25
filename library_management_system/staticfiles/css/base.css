@@ -1,0 +1,102 @@
+/* base.css */
+
+/* Navbar styling */
+.navbar {
+    background-color: #1e3a8a;
+    color: white;
+}
+
+/* General body and font styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    color: #333;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main content area */
+main {
+    flex-grow: 1; /* Makes the main content take up the available space */
+}
+
+/* Footer will be at the bottom */
+footer {
+    background-color: #2d3748; /* Dark gray background */
+    color: #e2e8f0; /* Light text */
+    padding: 1rem;
+    text-align: center;
+    margin-top: auto; /* Pushes the footer to the bottom */
+}
+
+/* Full-Screen Menu Transition */
+#menu {
+    transition: transform 0.3s ease-in-out;
+    position: fixed;
+    top: 0;
+    left: -14.5%;  /* Starts off-screen */
+    width: 13.5vw;  /* 1/8th of the screen width */
+    height: 100vh;
+    background-color: #1E40AF; /* Blue background */
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 20px;
+}
+
+/* When the menu is shown, slide it in */
+#menu.show {
+    transform: translateX(98%); /* Slide in */
+}
+
+/* Menu Links Styling */
+#menu a {
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+/* Hover Effect */
+#menu a:hover {
+    color: #d1d5db;
+}
+
+/* Notification Badge */
+.notification-count {
+    display: none;  /* Initially hidden */
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+.notification-count.show {
+    display: inline-block;
+}
+
+/* Navbar Adjustments */
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Space between items */
+}
+
+#notification-bell {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

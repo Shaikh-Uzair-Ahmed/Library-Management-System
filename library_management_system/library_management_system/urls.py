@@ -17,17 +17,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from django.shortcuts import redirect
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 handler404 = 'libraryweb.views.error_404'
 handler500 = 'libraryweb.views.error_500'
 
-
 urlpatterns = [
-    path('Admin/', admin.site.urls),
-    path("", lambda request: redirect("libraryweb:signin")),
-    path("Library/", lambda request: redirect("libraryweb:signin")),
-    path('Library/', include('libraryweb.urls',namespace='libraryweb'),
-    )
-    #connected to urls.py of libraryweb app in webpage it will be accessed through library/<webpage-name>
-]
-
+    path('admin/', admin.site.urls),
+    path("", lambda request: redirect("libraryweb:signin")),  # Redirect root to signin page
+    path('Library/', include('libraryweb.urls', namespace='libraryweb')), # Include app URLs under 'Library' 
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

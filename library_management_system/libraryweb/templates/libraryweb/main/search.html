@@ -9,7 +9,7 @@
     <!-- Search Bar -->
     <h2 class="text-3xl font-bold text-center text-blue-700 mb-6">Search for Books</h2>
     <div class="flex justify-center mb-8">
-        <form method="GET" action="{% url 'libraryweb:search' %}" class="flex space-x-2">
+        <form method="GET" action="{% url 'libraryweb:search' lib_num=request.session.lib_num %}" class="flex space-x-2">
             <input 
                 type="text" 
                 name="query" 
@@ -29,7 +29,7 @@
     <!-- Book List -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {% for book in books %}
-        <a href="{% url 'libraryweb:detail' book.isbn %}" class="block">
+        <a href="{% url 'libraryweb:detail' lib_num=request.session.lib_num isbn=book.isbn %}" class="block">
             <div class="book-card bg-white shadow-lg rounded-lg overflow-hidden">
                 <div class="book-cover">
                     <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="w-full h-full object-scale-down ">

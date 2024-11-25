@@ -52,8 +52,22 @@ sucess page and accepts data (database will be done later)
 
 20.Created custom error page that only works when Debug is False in settings
 
+21.Databases created
+
+22.Fully functional authentication stuff done i.e signup,signin and forgot password
+
+23.signup automatically creates LibNum which is used to access a session when user is active
+
+24.created two middlewares inactivitymiddleware which automatically signouts user if he isn't using website more than 5 mins
+
+25.the other is if User is set inactive by admin automatically log out ie activeusermiddleware
+
+26.created a dynamic context_processor that allows libnum to be accessable to all pages if a session of it is created
+
+27.admin page automatically created by Django website
+
+
 
 Tasks left
-1. Database connection
-2. Admin page
-3. Making it run on domain i.e. deploying the website
+1. Database connection(Book side)
+3. Making it run on domain i.e. deploying the website(optional)

@@ -28,6 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
 
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,8 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'libraryweb.apps.LibrarywebConfig', #libraryweb.apps.LibrarywebConfig if we have changes in Config other than default
+    'django_browser_reload',
+    'widget_tweaks', #Not used but downloaded 
+    'libraryweb', #libraryweb.apps.LibrarywebConfig if we have changes in Config other than default
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -49,6 +54,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'libraryweb.middleware.CaseInsensitiveMiddleware',
+    'libraryweb.middleware.ActiveUserMiddleware',#if User is set inactive by admin automatically log out
+    'libraryweb.middleware.InactivityLogoutMiddleware', #automatically clears session , makes user inactive and logs out
 ]
 
 ROOT_URLCONF = 'library_management_system.urls'
@@ -64,6 +71,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'libraryweb.context_processors.session_lib_num', 
+                
             ],
         },
     },
@@ -82,7 +91,7 @@ DATABASES = {
     }
 }
 
-
+AUTH_USER_MODEL = 'libraryweb.User'
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -117,7 +126,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = BASE_DIR / 'media'
+
+STATIC_URL = '/static/'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'libraryweb/static',
+]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
