@@ -1,5 +1,4 @@
-
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,9 +25,15 @@
 
         <!-- Navigation Options -->
         <div class="mt-6 space-y-4">
-            <a href="{% url 'libraryweb:home' %}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                Back to Home
-            </a>
+            {% if request.session.lib_num %}
+                <a href="{% url 'libraryweb:home' lib_num=request.session.lib_num %}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Back to Home
+                </a>
+            {% else %}
+                <a href="{% url 'libraryweb:signout' %}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Back to Signin
+                </a>
+            {% endif %}
         </div>
     </div>
 </body>

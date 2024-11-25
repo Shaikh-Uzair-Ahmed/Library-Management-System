@@ -66,6 +66,10 @@ sucess page and accepts data (database will be done later)
 
 27.admin page automatically created by Django website
 
+29.Created dynamic error pages that redirects based on whether user is in session(loggedin) or not
+-if logged in redirects to home page
+-else redirects to signin page
+
 
 
 Tasks left

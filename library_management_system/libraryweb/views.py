@@ -11,6 +11,13 @@ from django.contrib import messages
 from django.contrib.auth import login,logout
 
 
+def error_404(request, exception=None):
+    return render(request,'error404.html', status=404)
+
+def error_500(request):
+    return render(request,'error500.html', status=500)
+
+
 def authenticate_by_username(username, password):
     if not username or not password:
         return None  # Early return if username or password is empty
@@ -71,8 +78,13 @@ def Home_Page(request,lib_num):
 
 def Notification(request,lib_num):#will turn this also into listview later 
     try:
-        pass
-        #stuff to be added here for notifications using backend 
+        lib_num = request.session.get('lib_num')
+
+        if lib_num:
+        # Optionally, fetch user details using lib_num if needed
+            user = User.objects.get(lib_num=lib_num)
+            if not user.is_active:
+                return redirect('libraryweb:signin') 
     
     except Exception:
         return redirect('libraryweb:signin')
@@ -321,9 +333,3 @@ def sign_out(request):
     return redirect('libraryweb:signin')
 
     
-def error_404(request, exception=None):
-    return render(request,'libraryweb/error404.html', status=404)
-
-def error_500(request):
-    return render(request,'libraryweb/error500.html', status=500)
-
