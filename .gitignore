@@ -5,6 +5,7 @@
 __pycache__
 db.sqlite3
 media
+staticfiles
 
 # Backup files # 
 *.bak 
@@ -29,3 +30,4 @@ FWD
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+
