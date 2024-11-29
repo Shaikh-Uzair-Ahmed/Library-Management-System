@@ -354,6 +354,7 @@ class RequestSuccessView(TemplateView):
 
 def book_request_view(request, lib_num):
     # Create the form instance
+    request.session['lib_num'] = lib_num
     if request.method == 'POST':
         form = BookRequestForm(request.POST)
         
@@ -406,6 +407,8 @@ def book_request_view(request, lib_num):
         'form': form,
         'lib_num': lib_num
     })
+
+
 
 
 
