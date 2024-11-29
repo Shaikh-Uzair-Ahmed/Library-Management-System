@@ -11,6 +11,7 @@ class LibraryUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="library_profile")
     lib_num = models.CharField(max_length=15, unique=True)
     is_active = models.BooleanField(default=False)
+    fav_genre = models.TextField(null=True, blank=True, help_text="Favorite genres, separated by commas.")  # New field
 
     def save(self, *args, **kwargs):
         if not self.lib_num:
@@ -53,6 +54,14 @@ class AvailBooks(models.Model):
     @property
     def remaining_books(self):
         return self.total_books - self.available_books
+    
+   
+    def earliest_return(self):
+        if self.total_books == self.available_books:
+            return None  # All books are available
+        
+        earliest_borrow = self.borrowed_instances.order_by('borrow_date').first()
+        return earliest_borrow.borrow_date if earliest_borrow else None
 
     def __str__(self):
         return f"{self.book.title}: {self.available_books}/{self.total_books}"

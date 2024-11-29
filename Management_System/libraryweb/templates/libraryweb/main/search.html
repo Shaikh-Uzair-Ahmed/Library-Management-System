@@ -32,7 +32,9 @@
         <a href="{% url 'libraryweb:detail' lib_num=lib_num isbn=book.isbn %}" class="block">
             <div class="book-card bg-white shadow-lg rounded-lg overflow-hidden">
                 <div class="book-cover">
-                    <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="w-full h-full object-scale-down ">
+                    <img src="{% if book.cover_image %}{{ book.cover_image.url }}{% else %}{% static 'images/placeholder-book.png' %}{% endif %}" 
+                    alt="{{ book.title }}" 
+                    class="w-full h-full object-scale-down ">
                 </div>
                 <div class="p-4">
                     <h3 class="font-semibold text-lg text-gray-800">{{ book.title }}</h3>
@@ -45,5 +47,7 @@
         {% endfor %}
     </div>
 </section>
+
+<!-- Pagination -->
 {% include "pagination.html" with page=page_obj %}
 {% endblock %}

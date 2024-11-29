@@ -1,7 +1,9 @@
-from django.contrib import admin
+
 from .models import LibraryUser, BookMain, AvailBooks, UserBorrowed, LateFees, Request, Rating
 # Register your models here.
 from django.contrib import admin
+
+
 
 
 class LibraryUserAdmin(admin.ModelAdmin):
@@ -25,16 +27,29 @@ admin.site.register(LibraryUser, LibraryUserAdmin)
 class BookMainAdmin(admin.ModelAdmin):
     list_display = ('isbn', 'title', 'author', 'genre', 'cover_image')
     search_fields = ('isbn', 'title', 'author')
+    list_filter = ('genre',)
     ordering = ('title',)
 
 admin.site.register(BookMain, BookMainAdmin)
 
 class AvailBooksAdmin(admin.ModelAdmin):
-    list_display = ('book', 'total_books', 'available_books', 'remaining_books')
+    list_display = ('book', 'total_books', 'available_books', 'books_borrowed','earliest_return')
     search_fields = ('book__title',)
     list_filter = ('book__genre',)
 
+    # Use the existing property and rename the column header
+    def books_borrowed(self, obj):
+        return obj.remaining_books  # Use the property from the model
+
+    books_borrowed.short_description = 'Books Borrowed'
+
+    def earliest_return(self, obj):
+        return obj.earliest_return()  # Call the model function
+
+    earliest_return.short_description = 'Earliest Return'
+
 admin.site.register(AvailBooks, AvailBooksAdmin)
+
 
 class UserBorrowedAdmin(admin.ModelAdmin):
     list_display = ('user', 'book', 'borrow_date')

@@ -1,4 +1,5 @@
 {% extends "libraryweb/base.html" %}
+{% load static %}
 
 {% block title %}{{ bookdetail.title }} - Book Details{% endblock %}
 
@@ -6,7 +7,11 @@
 <section class="my-8 max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg">
     <!-- Book Cover and Title -->
     <div class="flex flex-col items-center">
-        <img src="{{ bookdetail.cover_url }}" alt="{{ bookdetail.title }}" class="w-48 h-auto rounded-md shadow-md mb-4">
+        {% if bookdetail.cover_image %}
+            <img src="{{ bookdetail.cover_image.url }}" alt="{{ bookdetail.title }}" class="w-48 h-auto rounded-md shadow-md mb-4">
+        {% else %}
+            <img src="{% static 'images/placeholder-book.png' %}" alt="No Cover Image" class="w-48 h-auto rounded-md shadow-md mb-4">
+        {% endif %}
         <h1 class="text-3xl font-bold text-blue-700 text-center">{{ bookdetail.title }}</h1>
         <p class="text-gray-500 text-lg">{{ bookdetail.author }}</p>
     </div>
@@ -23,15 +28,27 @@
         </div>
         <div class="flex justify-between items-center">
             <p class="text-gray-600 font-medium">Total Number of Copies:</p>
-            <p class="text-gray-800">{{ bookdetail.total_books }}</p>
+            <p class="text-gray-800">
+                {{ bookdetail.availability.total_books|default:"N/A" }}
+            </p>
         </div>
         <div class="flex justify-between items-center">
             <p class="text-gray-600 font-medium">Books Borrowed:</p>
-            <p class="text-gray-800">{{ bookdetail.borrowed_books }}</p>
+            <p class="text-gray-800">
+                {{ bookdetail.availability.remaining_books|default:"N/A" }}
+            </p>
         </div>
         <div class="flex justify-between items-center">
             <p class="text-gray-600 font-medium">Books Available:</p>
-            <p class="text-gray-800">{{ bookdetail.available_books }}</p>
+            <p class="text-gray-800">
+                {{ bookdetail.availability.available_books|default:"N/A" }}
+            </p>
+        </div>
+        <div class="flex justify-between items-center">
+            <p class="text-gray-600 font-medium">Earliest Return Date:</p>
+            <p class="text-gray-800">
+                {{ bookdetail.availability.earliest_return|default:"No borrowed books" }}
+            </p>
         </div>
     </div>
 </section>

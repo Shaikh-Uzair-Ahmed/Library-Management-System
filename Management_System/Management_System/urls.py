@@ -28,4 +28,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", lambda request: redirect("libraryweb:signin")),  # Redirect root to signin page
     path('Library/', include('libraryweb.urls', namespace='libraryweb')), # Include app URLs under 'Library' 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] 
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) 

@@ -30,7 +30,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
 
 SESSION_COOKIE_AGE = 300
-
+SESSION_COOKIE_NAME = 'libraryweb_session'
 
 # Application definition
 
@@ -54,8 +54,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'libraryweb.middleware.InactivityLogoutMiddleware',#automatically clears session , makes user inactive and logs out
-    'libraryweb.middleware.ActiveUserMiddleware',#if User is set inactive by admin automatically log out 
 ]
+
 
 ROOT_URLCONF = 'Management_System.urls'
 

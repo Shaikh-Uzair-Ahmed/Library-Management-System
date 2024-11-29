@@ -1,9 +1,15 @@
 from django import forms
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User 
+from .models import User,LibraryUser 
 from django.core.exceptions import ValidationError
 # Get the custom User model
+
+
+class ProfileEditForm(forms.ModelForm):
+    class Meta:
+        model = LibraryUser
+        fields = ['fav_genre']  # Exclude lib_num from editable fields
 
 
 
@@ -59,7 +65,7 @@ class SignUpForm(UserCreationForm):
 class BookRequestForm(forms.Form):
     title = forms.CharField(label="Book Title", max_length=100,required=False)
     author = forms.CharField(label="Author", max_length=100, required=False)
-    isbn = forms.CharField(label="ISBN", min_length=13,max_length=13)
+    isbn = forms.CharField(label="ISBN",max_length=13,)
 
 
 

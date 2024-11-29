@@ -34,7 +34,7 @@ def populate_books():
     search_terms = [ "science", "mystery", "fantasy", "romance"]
     
     for term in search_terms:
-        books = fetch_books(term, limit=20)  # Fetch 20 books per term
+        books = fetch_books(term, limit=100)  # Fetch 20 books per term
         for book_data in books:
             # Extract required details
             isbn = book_data.get("isbn", [None])[0]

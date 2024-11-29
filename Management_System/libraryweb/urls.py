@@ -12,12 +12,14 @@ urlpatterns = [
     path('Signout/', views.sign_out, name='signout'),
     path('Resetpassword/', views.reset_password, name='verify_user'),
     path('<str:lib_num>/Notifications/',views.Notification,name='notifications'),
-    path('<str:lib_num>/Request/', views.BookRequestView.as_view(), name='request'),  
-    path('<str:lib_num>/Success/', views.RequestSuccessView.as_view(), name='success'),  #Order of url paths matter
+    path('<str:lib_num>/Request/', views.book_request_view, name='request'),    #Order of url paths matter
     path('<str:lib_num>/Search/', views.SearchPageView.as_view(), name='search'),
     path('<str:lib_num>/Credits/', views.CreditsView.as_view(), name='credits'),
     path('<str:lib_num>/Home/',views.Home_Page,name='home'),
+    path('<str:lib_num>/Profile', views.ProfileView.as_view(), name='profile'),
+    path('<str:lib_num>/Profile/Updated', views.UpdateProfileView.as_view(), name='update_profile'),
     path('<str:lib_num>/<str:isbn>/', views.DetailPage.as_view(), name="detail"),
+    path('<str:lib_num>/Success/<str:isbn>', views.RequestSuccessView.as_view(), name='success'),
     
 ]
 

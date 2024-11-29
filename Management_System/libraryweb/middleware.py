@@ -52,22 +52,7 @@ class CaseInsensitiveMiddleware:
         response = self.get_response(request)
         return response
     
-class ActiveUserMiddleware:
-    """
-    Middleware to log out users whose `is_active` is False.
-    """
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        if request.user.is_authenticated:
-            if not request.user.is_active:
-                request.user.library_profile.is_active = False
-                logout(request)
-                return redirect(reverse('libraryweb:signin'))
-
-        return self.get_response(request)
-
+    
 class InactivityLogoutMiddleware:
     """
     Middleware to log out users after a period of inactivity.
