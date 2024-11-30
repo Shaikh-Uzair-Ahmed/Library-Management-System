@@ -1,12 +1,12 @@
 from django.db import models, transaction
-from django.contrib.auth.models import User  # Keep the default User model
-from datetime import datetime, timedelta
-from django.db.models import Avg
-from django.utils.timezone import now
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator,MinValueValidator
+from django.utils.timezone import now
+from datetime import timedelta
+from django.db.models import Avg
+from django.contrib.auth.models import User
 
-# Separate LibraryUser model for non-admin users
+
 class LibraryUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="library_profile")
     lib_num = models.CharField(max_length=15, unique=True)
@@ -16,7 +16,7 @@ class LibraryUser(models.Model):
     def save(self, *args, **kwargs):
         if not self.lib_num:
             with transaction.atomic():
-                current_year = datetime.now().year
+                current_year = now().year
                 # Find the last LibraryUser lib_num of the current year
                 last_user = LibraryUser.objects.filter(lib_num__startswith=f"{current_year}LIB").order_by('-lib_num').first()
                 if last_user:
@@ -52,19 +52,41 @@ class AvailBooks(models.Model):
     available_books = models.PositiveIntegerField(default=0)
 
     @property
-    def remaining_books(self):
+    def remaining_books(self):#Borrowed Books
         return self.total_books - self.available_books
-    
-   
+
     def earliest_return(self):
         if self.total_books == self.available_books:
             return None  # All books are available
         
         earliest_borrow = self.borrowed_instances.order_by('borrow_date').first()
-        return earliest_borrow.borrow_date if earliest_borrow else None
+        if earliest_borrow:
+            return earliest_borrow.borrow_date + timedelta(days=7)
+        return None  # No borrowed books
+    
+    def clean(self):
+        # Check if available_books is greater than total_books
+        if self.available_books > self.total_books:
+            raise ValidationError(f"Available books cannot be greater than total books for '{self.book.title}'.")
 
     def __str__(self):
         return f"{self.book.title}: {self.available_books}/{self.total_books}"
+
+
+class UserHistory(models.Model):
+    user = models.ForeignKey(LibraryUser, on_delete=models.CASCADE, related_name="borrow_history")
+    book = models.ForeignKey(BookMain, on_delete=models.CASCADE, related_name="borrow_history")
+    borrow_date = models.DateTimeField()
+    return_date = models.DateTimeField(auto_now_add=True)
+    on_time = models.BooleanField()
+
+    def save(self, *args, **kwargs):
+        due_date = self.borrow_date + timedelta(days=7)
+        self.on_time = self.return_date <= due_date
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"History: {self.user.lib_num} returned {self.book.title} - {'On Time' if self.on_time else 'Late'}"
 
 
 class UserBorrowed(models.Model):
@@ -73,23 +95,32 @@ class UserBorrowed(models.Model):
     borrow_date = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        # Check if the user is already borrowing 3 books
-        if self.user.borrowed_books.count() >= 3:
-            raise ValidationError("A user can only borrow a maximum of 3 books at a time.")
-        
-        # Check if the book is available
-        if self.book.remaining_books == 0:
-            raise ValidationError("Book is not available for borrowing.")
-        
-        # Decrease the available books
         self.book.available_books -= 1
         self.book.save()
-        
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.user.lib_num} borrowed {self.book.book.title}"
+    def delete(self, *args, **kwargs):
+        with transaction.atomic():
+            # Increment the available books count
+            self.book.available_books += 1
+            self.book.save()
+        super().delete(*args, **kwargs)
+    
+    def clean(self):
+        # Check if available_books is greater than total_books
+        if self.user.borrowed_books.count() >= 3:
+            raise ValidationError("A user can only borrow a maximum of 3 books at a time.")
+        if self.book.available_books == 0:
+            raise ValidationError("Book is not available for borrowing.")
+        
 
+    @property
+    def return_date(self):
+        """Calculate the return date as 7 days after the borrow date."""
+        return self.borrow_date + timedelta(days=7)
+
+    def __str__(self):
+        return f"{self.user.lib_num} Borrowed {self.book.book.title} on {self.borrow_date.day}/{self.borrow_date.month}/{self.borrow_date.year}"
 
 class LateFees(models.Model):
     user_borrowed = models.OneToOneField(UserBorrowed, on_delete=models.CASCADE, related_name="late_fee")

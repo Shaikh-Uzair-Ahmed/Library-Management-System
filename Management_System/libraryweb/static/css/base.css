@@ -1,5 +1,3 @@
-/* base.css */
-
 /* Navbar styling */
 .navbar {
     background-color: #1e3a8a;
@@ -25,78 +23,77 @@ main {
     flex-grow: 1; /* Makes the main content take up the available space */
 }
 
-/* Footer will be at the bottom */
+/* Footer styling */
 footer {
-    background-color: #2d3748; /* Dark gray background */
-    color: #e2e8f0; /* Light text */
+    background-color: #2d3748;
+    color: #e2e8f0;
     padding: 1rem;
     text-align: center;
-    margin-top: auto; /* Pushes the footer to the bottom */
+    margin-top: auto;
 }
 
-/* Full-Screen Menu Transition */
+/* Sliding Menu */
 #menu {
     transition: transform 0.3s ease-in-out;
     position: fixed;
     top: 0;
-    left: -14.5%;  /* Starts off-screen */
-    width: 13.5vw;  /* 1/8th of the screen width */
+    left: -200px; /* Initially off-screen */
+    width: 200px;
     height: 100vh;
-    background-color: #1E40AF; /* Blue background */
+    background-color: #1E40AF;
     z-index: 50;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding-top: 20px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 20px;
 }
 
-/* When the menu is shown, slide it in */
 #menu.show {
-    transform: translateX(98%); /* Slide in */
+    transform: translateX(200px); /* Slide in from the left */
 }
 
 /* Menu Links Styling */
 #menu a {
     color: white;
-    font-size: 1.5rem;
-    margin-bottom: 20px;
+    font-size: 1rem;
+    margin-bottom: 10px;
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
-/* Hover Effect */
 #menu a:hover {
     color: #d1d5db;
 }
 
-/* Notification Badge */
-.notification-count {
-    display: none;  /* Initially hidden */
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: red;
-    color: white;
-    border-radius: 50%;
-    padding: 2px 6px;
-    font-size: 12px;
-}
-
-.notification-count.show {
-    display: inline-block;
-}
-
-/* Navbar Adjustments */
+/* Navbar right section */
 .navbar-right {
     display: flex;
     align-items: center;
-    gap: 20px; /* Space between items */
+    gap: 20px;
 }
 
-#notification-bell {
+/* Library Number */
+#library-number {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Hamburger icon */
+#hamburger-icon {
+    cursor: pointer;
+    color: white;
+}
+
+/* Pagination fixed above the footer */
+.pagination-container {
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    bottom: 3rem; /* This positions the pagination above the footer */
+    width: 100%;
+    margin-top: auto; /* Ensures pagination stays at the bottom of the content but above the footer */
+}
+
+.pagination {
+    padding-bottom: 1rem; /* Adds some space at the bottom of the pagination */
 }

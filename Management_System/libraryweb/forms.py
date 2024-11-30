@@ -1,9 +1,18 @@
 from django import forms
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User,LibraryUser 
+from .models import User,LibraryUser ,Rating
 from django.core.exceptions import ValidationError
 # Get the custom User model
+
+class RatingForm(forms.ModelForm):
+    class Meta:
+        model = Rating
+        fields = ['rating', 'review']
+        widgets = {
+            'rating': forms.NumberInput(attrs={'min': 0, 'max': 5, 'step': 1}),
+            'review': forms.Textarea(attrs={'rows': 4, 'cols': 50}),
+        }
 
 
 class ProfileEditForm(forms.ModelForm):

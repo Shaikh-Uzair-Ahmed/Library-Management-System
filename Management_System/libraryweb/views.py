@@ -1,78 +1,20 @@
 from django.shortcuts import render,redirect,get_object_or_404
 import json
-from django.db.models import Q
+from django.db.models import Q,Avg,Count
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404
 from django.views.generic import ListView,DetailView,FormView,TemplateView,View
 from django.urls import reverse
-from .forms import BookRequestForm,SignUpForm,ResetPasswordForm,SignInForm,ProfileEditForm
+from .forms import BookRequestForm,SignUpForm,ResetPasswordForm,SignInForm,RatingForm
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.contrib.auth.forms import SetPasswordForm
-from .models import LibraryUser,BookMain,Request
+from .models import LibraryUser,BookMain,Request,Rating,UserBorrowed,UserHistory,LateFees
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import login,logout,authenticate
 from django.views.generic.list import ListView
 from django.contrib.auth.hashers import check_password
-
-
-class ProfileView(TemplateView):
-    template_name = 'libraryweb/main/profile.html'
-
-    def get_context_data(self, **kwargs):
-        # Get the context from the parent class
-        context = super().get_context_data(**kwargs)
-        
-        # Get lib_num from the URL
-        lib_num = self.kwargs.get('lib_num', None)
-        
-        # Add lib_num to the context
-        context['lib_num'] = lib_num
-
-        try:
-            # Get the LibraryUser associated with the lib_num
-            library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
-            user = library_user.user
-
-            # Check if the user is active
-            if not user.is_active or not library_user.is_active:
-                print("User is not active, redirecting to signin")
-                messages.error(self.request, "Your account is inactive. Please sign in again.")
-                return redirect('libraryweb:signout')
-
-            # Add user and library_profile to the context
-            context['user'] = user
-            context['library_profile'] = library_user
-
-        except Exception as e:
-            # Log and handle unexpected errors
-            print(f"Unexpected error: {e}")
-            messages.error(self.request, "An error occurred while loading your profile.")
-            return redirect('libraryweb:signout')
-
-        return context
-
-class UpdateProfileView(View):
-    def post(self, request, *args, **kwargs):
-        lib_num = kwargs.get('lib_num')
-        try:
-            library_user = LibraryUser.objects.get(lib_num=lib_num)
-            # Parse JSON data from the request body
-            data = json.loads(request.body)
-            fav_genre = data.get('fav_genre')
-
-            if fav_genre:
-                library_user.fav_genre = fav_genre
-                library_user.save()
-                # Send success response with profile URL
-                profile_url = reverse('libraryweb:profile', kwargs={'lib_num': lib_num})
-                return JsonResponse({'success': True, 'redirect_url': profile_url})
-            
-            profile_url = reverse('libraryweb:profile', kwargs={'lib_num': lib_num})
-            return JsonResponse({'success': False , 'redirect_url': profile_url})
-        except LibraryUser.DoesNotExist:
-            return JsonResponse({'success': False})
 
 def check_user_status(request):
     """
@@ -139,86 +81,196 @@ def error_500(request):
     return render(request,'error500.html',{'lib_num': lib_num}, status=500)
 
 
-#from django.utils.decorators import method_decorator
-#from django.views.decorators.csrf import csrf_exempt
-#from django.http import JsonResponse
-#from django.views.decorators.http import require_POST
-#from django.shortcuts import get_object_or_404
+class BorrowedBooksView(ListView):
+    model = UserBorrowed
+    template_name = "libraryweb/main/borrowed.html"
+    context_object_name = "borrowed_books"
 
-# Create your views here.
-def Home_Page(request, lib_num):
-    try:
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Ensure the user is valid and active before proceeding.
+        """
+        # Get lib_num from the URL
+        lib_num = self.kwargs.get('lib_num')
 
-        library_user = LibraryUser.objects.get(lib_num=lib_num)
-        
+        try:
+            # Fetch the LibraryUser
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
 
-        user = library_user.user
-        
+            # Check if the user is active
+            if not self.library_user.user.is_active or not self.library_user.is_active:
+                messages.error(self.request, "Your account is inactive. Please sign in again.")
+                return redirect('libraryweb:signout')
 
-        if not user.is_active:
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            messages.error(self.request, "An error occurred. Please try again later.")
             return redirect('libraryweb:signout')
 
-        # Example popular books data
-        popular_books = [
-    {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald", "genre": "Fiction", "isbn": "9780743273565", "cover_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1677887611i/71102288.jpg"},
-    {"title": "1984", "author": "George Orwell", "genre": "Dystopian", "isbn": "9780451524935", "cover_url": "https://example.com/path-to-1984-cover.jpg"},
-    {"title": "To Kill a Mockingbird", "author": "Harper Lee", "genre": "Fiction", "isbn": "9780061120084", "cover_url": "https://example.com/path-to-mockingbird-cover.jpg"},
-    {"title": "Pride and Prejudice", "author": "Jane Austen", "genre": "Romance", "isbn": "9780141439518", "cover_url": "https://example.com/path-to-pride-prejudice-cover.jpg"},
-    {"title": "Moby-Dick", "author": "Herman Melville", "genre": "Adventure", "isbn": "9781503280786", "cover_url": "https://example.com/path-to-moby-dick-cover.jpg"},
-    {"title": "War and Peace", "author": "Leo Tolstoy", "genre": "Historical Fiction", "isbn": "9781853260629", "cover_url": "https://example.com/path-to-war-peace-cover.jpg"},
-    {"title": "The Catcher in the Rye", "author": "J.D. Salinger", "genre": "Fiction", "isbn": "9780316769488", "cover_url": "https://example.com/path-to-catcher-rye-cover.jpg"},
-    {"title": "The Lord of the Rings", "author": "J.R.R. Tolkien", "genre": "Fantasy", "isbn": "9780544003415", "cover_url": "https://d28hgpri8am2if.cloudfront.net/book_images/onix/cvr9781608873821/the-lord-of-the-rings-9781608873821_hr.jpg"},
-    {"title": "Crime and Punishment", "author": "Fyodor Dostoevsky", "genre": "Psychological Fiction", "isbn": "9780140449136", "cover_url": "https://example.com/path-to-crime-punishment-cover.jpg"},
-    {"title": "Brave New World", "author": "Aldous Huxley", "genre": "Dystopian", "isbn": "9780060850524", "cover_url": "https://example.com/path-to-brave-new-world-cover.jpg"},
-    ]  # Your books data here
+        return super().dispatch(request, *args, **kwargs)
 
-        return render(request, 'libraryweb/main/home.html', {'popular_books': popular_books, 'lib_num': lib_num})
-    
-    except LibraryUser.DoesNotExist:
-        return redirect('libraryweb:signout')
-    
-    except Exception as e:
-        return redirect('libraryweb:signout')
+    def get_queryset(self):
+        """
+        Filter borrowed books by the library user.
+        """
+        return UserBorrowed.objects.filter(user=self.library_user)
+
+    def get_context_data(self, **kwargs):
+        """
+        Add additional context to the template.
+        """
+        context = super().get_context_data(**kwargs)
+        context['lib_num'] = self.kwargs.get('lib_num')
+        return context
+
+
+class ProfileView(TemplateView):
+    template_name = 'libraryweb/main/profile.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get lib_num from the URL
+        lib_num = self.kwargs.get('lib_num', None)
+
+        try:
+            # Get the LibraryUser associated with the lib_num
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+            self.user = self.library_user.user
+
+            # Check if the user is active
+            if not self.user.is_active or not self.library_user.is_active:
+                print("User is not active, redirecting to signout")
+                messages.error(self.request, "Your account is inactive. Please sign in again.")
+                return redirect('libraryweb:signout')
+
+        except Exception as e:
+            # Log and handle unexpected errors
+            print(f"Unexpected error: {e}")
+            messages.error(self.request, "An error occurred while loading your profile.")
+            return redirect('libraryweb:signout')
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        # Get the context from the parent class
+        context = super().get_context_data(**kwargs)
+
+        # Add lib_num, user, and library_profile to the context
+        context['lib_num'] = self.kwargs.get('lib_num', None)
+        context['user'] = self.user
+        context['library_profile'] = self.library_user
+
+        return context
+
+class UpdateProfileView(View):
+    def post(self, request, *args, **kwargs):
+        lib_num = kwargs.get('lib_num')
+        try:
+            library_user = LibraryUser.objects.get(lib_num=lib_num)
+            # Parse JSON data from the request body
+            data = json.loads(request.body)
+            fav_genre = data.get('fav_genre')
+
+            if fav_genre:
+                library_user.fav_genre = fav_genre
+                library_user.save()
+                # Send success response with profile URL
+                profile_url = reverse('libraryweb:profile', kwargs={'lib_num': lib_num})
+                return JsonResponse({'success': True, 'redirect_url': profile_url})
+            
+            profile_url = reverse('libraryweb:profile', kwargs={'lib_num': lib_num})
+            return JsonResponse({'success': False , 'redirect_url': profile_url})
+        except LibraryUser.DoesNotExist:
+            return JsonResponse({'success': False})
+
+
+class HomePageView(ListView):
+    model = BookMain
+    context_object_name = "popular_books"
+    template_name = "libraryweb/main/home.html"
+    paginate_by = 10  # Limit to top 10 books
+
+    def get_queryset(self):
+        # Annotate books with average rating and borrowed count
+        return (
+            BookMain.objects.annotate(
+                avg_rating=Avg('ratings__rating'),  # Average rating
+                borrowed_count=Count('availability__borrowed_instances')  # Borrowed count
+            )
+            .order_by('-avg_rating', '-borrowed_count', 'title')[:10]  # Limit to top 10
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get the library number from the URL
+        lib_num = self.kwargs.get('lib_num', None)
+
+        try:
+            library_user = LibraryUser.objects.get(lib_num=lib_num)
+            user = library_user.user
+
+            if not user.is_active:
+                return redirect('libraryweb:signout')
+
+        except LibraryUser.DoesNotExist:
+            return redirect('libraryweb:signout')
+
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return redirect('libraryweb:signout')
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        # Fetch the context from the parent class
+        context = super().get_context_data(**kwargs)
+
+        # Add the library number to the context
+        context['lib_num'] = self.kwargs.get('lib_num', None)
+        return context
 
 #in home page we will use for loop to take out data, later this will be done by real database
 
     
 
-def Notification(request,lib_num):#will turn this also into listview later 
-    try:
-        library_user = LibraryUser.objects.get(lib_num=lib_num)
-        user = library_user.user
+class HistoryView(ListView):
+    model = UserHistory
+    template_name = 'libraryweb/main/history.html'  # Specify your template
+    context_object_name = 'user_history'  # The name of the context variable
+    paginate_by = 10  # Number of items per page
 
-        if not user.is_active:
-            print("User is not active, redirecting to signin")
+    def get_queryset(self):
+        # Get the user based on their library number
+        lib_num = self.kwargs['lib_num']
+        return UserHistory.objects.filter(user__lib_num=lib_num).order_by('-borrow_date')
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get the library number from the URL
+        lib_num = self.kwargs.get('lib_num', None)
+
+        try:
+            library_user = LibraryUser.objects.get(lib_num=lib_num)
+            user = library_user.user
+
+            if not user.is_active:
+                return redirect('libraryweb:signout')
+
+        except LibraryUser.DoesNotExist:
             return redirect('libraryweb:signout')
-    
-    except LibraryUser.DoesNotExist:
-        print(f"No LibraryUser found with lib_num: {lib_num}")
-        return redirect('libraryweb:signout')
-    
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return redirect('libraryweb:signout')
-    return render(request,'libraryweb/main/notifications.html',{'lib_num': lib_num})
+
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return redirect('libraryweb:signout')
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        # Fetch the context from the parent class
+        context = super().get_context_data(**kwargs)
+
+        # Add the library number to the context
+        context['lib_num'] = self.kwargs.get('lib_num', None)
+        return context
 
 
-#Future reference
-"""def notification_count(request):
-    # Placeholder for logic to get the actual count of unchecked notifications
-    # Replace with your own logic, e.g., querying from the database
-    unchecked_count = 3  # Example count
-    return JsonResponse({'count': unchecked_count})
-
-
-@require_POST
-def update_notification_status(request):
-    notification_id = request.POST.get('notification_id')
-    notification = get_object_or_404(Notification, id=notification_id)
-    notification.is_checked = True
-    notification.save()
-    unchecked_count = Notification.objects.filter(is_checked=False).count()
-    return JsonResponse({'count': unchecked_count})"""
 
 class SearchPageView(ListView):
     model = BookMain
@@ -226,128 +278,161 @@ class SearchPageView(ListView):
     paginate_by = 10
     template_name = 'libraryweb/main/search.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Ensure the user is valid and active before proceeding.
+        """
+        # Get lib_num from the URL
+        lib_num = self.kwargs.get('lib_num')
+
+        try:
+            # Fetch the LibraryUser
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+
+            # Check if the user is active
+            if not self.library_user.user.is_active or not self.library_user.is_active:
+                print("User is not active, redirecting to signout")
+                messages.error(self.request, "Your account is inactive. Please sign in again.")
+                return redirect('libraryweb:signout')
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            messages.error(self.request, "An error occurred. Please try again later.")
+            return redirect('libraryweb:signout')
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
-    # Get the search query from the request
+        """
+        Filter books based on the search query.
+        """
+        # Get the search query from the request
         query = self.request.GET.get("query", "")
 
-        # Query the database
+        # Annotate with average rating and borrowed count
+        queryset = BookMain.objects.annotate(
+            avg_rating=Avg('ratings__rating'),  # Average rating of the book
+            borrowed_count=Count('availability__borrowed_instances')  # Borrowed count
+        )
+
+        # Apply search filters if query exists
         if query:
-            return BookMain.objects.filter(
+            queryset = queryset.filter(
                 Q(title__icontains=query) |
                 Q(author__icontains=query) |
                 Q(genre__icontains=query) |
                 Q(isbn__icontains=query)
-            ).order_by("title")  # Add ordering by title (or any other field)
-    
-        return BookMain.objects.all().order_by("title") 
+            )
+        
+        # Order by avg_rating (descending), borrowed_count (descending), and title (ascending)
+        return queryset.order_by('-avg_rating', '-borrowed_count', 'title')
 
     def get_context_data(self, **kwargs):
+        """
+        Add additional context to the template.
+        """
         # Get the context from the parent class
         context = super().get_context_data(**kwargs)
         
-        # Get lib_num from the URL
-        lib_num = self.kwargs.get('lib_num', None)
-        
         # Add lib_num to the context
-        context['lib_num'] = lib_num
-
-        # Check if the user exists and is active
-        try:
-            library_user = LibraryUser.objects.get(lib_num=lib_num)
-            user = library_user.user
-            
-            if not user.is_active:
-                print("User is not active, redirecting to signin")
-                return redirect('libraryweb:signout')
-                
-        except LibraryUser.DoesNotExist:
-            print(f"No LibraryUser found with lib_num: {lib_num}")
-            return redirect('libraryweb:signout')
-        
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            return redirect('libraryweb:signout')
-
+        context['lib_num'] = self.kwargs.get('lib_num')
         return context
-
     
 
     
+
 class DetailPage(DetailView):
     model = BookMain
     context_object_name = "bookdetail"
     template_name = "libraryweb/main/detail.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Ensure the user is valid and active before proceeding.
+        """
+        # Get lib_num from the URL
+        lib_num = self.kwargs.get('lib_num')
+
+        try:
+            # Fetch the LibraryUser
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+
+            # Check if the user is active
+            if not self.library_user.user.is_active or not self.library_user.is_active:
+                messages.error(self.request, "Your account is inactive. Please sign in again.")
+                return redirect('libraryweb:signout')
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            messages.error(self.request, "An error occurred. Please try again later.")
+            return redirect('libraryweb:signout')
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_object(self):
-        # Retrieve the ISBN from the URL
+        """
+        Get the book object based on ISBN.
+        """
         isbn = self.kwargs.get("isbn")
-        
-        # Fetch the book from the database
         try:
             book = BookMain.objects.get(isbn=isbn)
         except BookMain.DoesNotExist:
             raise Http404("Book Not Found")
-
-        # Check if availability data exists for the book
-        availability = getattr(book, 'availability', None)
-
-        # Add availability information to the book object
-        if availability:
-            book.total_books = availability.total_books
-            book.available_books = availability.available_books
-            book.remaining_books = availability.remaining_books  # Access the remaining_books property
-            book.earliest_return = availability.earliest_return()  # Access the earliest_return method
-        else:
-            # Default values if no availability data is present
-            book.total_books = 0
-            book.available_books = 0
-            book.remaining_books = 0
-            book.earliest_return = None
-
         return book
 
     def get_context_data(self, **kwargs):
-        # Get the context from the parent class
+        """
+        Add additional context to the template.
+        """
         context = super().get_context_data(**kwargs)
-        
-        # Get lib_num from the URL
-        lib_num = self.kwargs.get('lib_num', None)
-        
-        # Add lib_num to the context
-        context['lib_num'] = lib_num
 
-        # Check if the user exists and is active
-        try:
-            library_user = LibraryUser.objects.get(lib_num=lib_num)
-            user = library_user.user
-            
-            if not user.is_active:
-                print("User is not active, redirecting to signin")
-                return redirect('libraryweb:signout')
-                
-        except LibraryUser.DoesNotExist:
-            print(f"No LibraryUser found with lib_num: {lib_num}")
-            return redirect('libraryweb:signout')
-        
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            return redirect('libraryweb:signout')
+        # Add lib_num to the context
+        context['lib_num'] = self.kwargs.get('lib_num')
+
+        # Add rating form and reviews
+        context['rating_form'] = RatingForm()
+        context['existing_rating'] = Rating.objects.filter(user=self.library_user, book=self.object).first()
+        context['all_ratings'] = Rating.objects.filter(book=self.object).select_related('user')
 
         return context
-     
+    
 
 class RequestSuccessView(TemplateView):
     template_name = 'libraryweb/main/success.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Ensure the user is valid and active before proceeding.
+        """
+        # Get lib_num from the session or query parameters
+        lib_num = self.request.session.get('lib_num', self.request.GET.get('lib_num'))
+
+        try:
+            # Fetch the LibraryUser
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+
+            # Check if the user is active
+            if not self.library_user.user.is_active or not self.library_user.is_active:
+                messages.error(self.request, "Your account is inactive. Please sign in again.")
+                return redirect('libraryweb:signout')
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            messages.error(self.request, "An error occurred. Please try again later.")
+            return redirect('libraryweb:signout')
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
+        """
+        Add 'lib_num' to the context.
+        """
         context = super().get_context_data(**kwargs)
-        
-        # Get the 'isbn' from the query parameters
         
         # Get the 'lib_num' from the session or query parameters
         lib_num = self.request.session.get('lib_num', self.request.GET.get('lib_num'))
         
-        # Add 'isbn' and 'lib_num' to the context
+        # Add 'lib_num' to the context
         context['lib_num'] = lib_num
         
         return context
@@ -458,7 +543,9 @@ class SignUpView(FormView):
     success_url = reverse_lazy('libraryweb:signin')
 
     def form_valid(self, form):
-        user = form.save()  # Save the user instance
+        user = form.save(commit=False)
+        user.email = form.cleaned_data['gmail']  # Save the email field
+        user.save()
         LibraryUser.objects.create(user=user)
         return super().form_valid(form)
 
@@ -514,3 +601,45 @@ def sign_out(request):
 
     # Redirect to the sign-in page after logging out
     return redirect('libraryweb:signin')
+
+class LateFeesListView(ListView):
+    model = LateFees
+    template_name = 'libraryweb/main/late.html'
+    context_object_name = 'late_fees'
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Ensure the user is valid and active before proceeding.
+        """
+        lib_num = self.kwargs['lib_num']
+        try:
+            # Fetch the LibraryUser based on the lib_num
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+
+            # Check if the user is active
+            if not self.library_user.user.is_active or not self.library_user.is_active:
+                messages.error(self.request, "Your account is inactive. Please sign in again.")
+                return redirect('libraryweb:signout')
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            messages.error(self.request, "An error occurred. Please try again later.")
+            return redirect('libraryweb:signout')
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        """
+        Filter LateFees based on the user's library number (lib_num).
+        """
+        lib_num = self.kwargs['lib_num']
+        # Filtering LateFees based on the related UserBorrowed and LibraryUser models
+        return LateFees.objects.filter(user_borrowed__user__lib_num=lib_num).order_by('fee')
+
+    def get_context_data(self, **kwargs):
+        """
+        Add the current user's library number to the context.
+        """
+        context = super().get_context_data(**kwargs)
+        context['lib_num'] = self.kwargs['lib_num']
+        return context
