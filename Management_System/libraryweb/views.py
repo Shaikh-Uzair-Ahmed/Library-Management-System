@@ -341,6 +341,7 @@ class SearchPageView(ListView):
 
     
 
+
 class DetailPage(DetailView):
     model = BookMain
     context_object_name = "bookdetail"
@@ -350,9 +351,7 @@ class DetailPage(DetailView):
         """
         Ensure the user is valid and active before proceeding.
         """
-        # Get lib_num from the URL
         lib_num = self.kwargs.get('lib_num')
-
         try:
             # Fetch the LibraryUser
             self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
@@ -379,6 +378,30 @@ class DetailPage(DetailView):
         except BookMain.DoesNotExist:
             raise Http404("Book Not Found")
         return book
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle the POST request to submit a rating form.
+        """
+        # Get the current book
+        book = self.get_object()
+
+        # Create the form instance with the POST data
+        form = RatingForm(request.POST)
+        
+        if form.is_valid():
+            # If the form is valid, save the rating
+            rating = form.save(commit=False)
+            rating.user = self.library_user  # Set the current user
+            rating.book = book  # Set the current book
+            rating.save()  # Save the rating
+
+            # Add a success message and redirect to the same page
+            messages.success(request, "Your rating has been submitted!")
+            return redirect('libraryweb:detail', lib_num=self.library_user.lib_num, isbn=book.isbn)
+
+        # If the form is not valid, re-render the page with form errors
+        return self.get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """
