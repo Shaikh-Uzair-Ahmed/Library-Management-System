@@ -70,8 +70,8 @@ sucess page and accepts data (database will be done later)
 -if logged in redirects to home page
 -else redirects to signin page
 
+30.added History , latefees , borrowed books , profile page
 
 
 Tasks left
-1. Database connection(Book side)
 3. Making it run on domain i.e. deploying the website(optional)
