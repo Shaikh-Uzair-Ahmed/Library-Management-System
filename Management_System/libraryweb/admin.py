@@ -62,7 +62,7 @@ admin.site.register(AvailBooks, AvailBooksAdmin)
 
 
 class UserBorrowedAdmin(admin.ModelAdmin):
-    list_display = ('user', 'book', 'borrow_date')
+    list_display = ('user', 'book', 'borrow_date','return_date')
     search_fields = ('user__lib_num', 'book__book__title')
     list_filter = ('borrow_date',)
     ordering = ('-borrow_date',)
