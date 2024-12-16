@@ -633,9 +633,8 @@ def sign_out(request):
         # Set the user's 'is_active' status to False
         user = request.user
         user.is_active = False
-        if hasattr(user, 'library_profile'):
-            user.library_profile.is_active = False
-            user.library_profile.save()
+        user.library_profile.is_active = False
+        user.library_profile.save()
         user.save()
         # Clear the user's session data
         request.session.flush()
