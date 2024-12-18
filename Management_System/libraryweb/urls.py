@@ -26,7 +26,3 @@ urlpatterns = [
 ]
 
 
-#Future uses
-"""path('api/notification-count/', views.notification_count, name='notification_count'),
-    path('api/update-notification/', views.update_notification_status, name='update_notification_status'),
-"""

@@ -61,7 +61,7 @@ class AvailBooks(models.Model):
         
         earliest_borrow = self.borrowed_instances.order_by('borrow_date').first()
         if earliest_borrow:
-            return earliest_borrow.borrow_date + timedelta(days=7)
+            return earliest_borrow.borrow_date + timedelta(days=3)
         return None  # No borrowed books
     
     def clean(self):
@@ -81,7 +81,7 @@ class UserHistory(models.Model):
     on_time = models.BooleanField()
 
     def save(self, *args, **kwargs):
-        due_date = self.borrow_date + timedelta(days=7)
+        due_date = self.borrow_date + timedelta(days=3)
         self.on_time = self.return_date <= due_date
         super().save(*args, **kwargs)
 
@@ -117,7 +117,7 @@ class UserBorrowed(models.Model):
     @property
     def return_date(self):
         """Calculate the return date as 7 days after the borrow date."""
-        return self.borrow_date + timedelta(days=7)
+        return self.borrow_date + timedelta(days=3)
 
     def __str__(self):
         return f"{self.user.lib_num} Borrowed {self.book.book.title} on {self.borrow_date.day}/{self.borrow_date.month}/{self.borrow_date.year}"
@@ -128,7 +128,7 @@ class LateFees(models.Model):
     fee = models.PositiveIntegerField(default=0)
 
     def calculate_fees(self):
-        due_date = self.user_borrowed.borrow_date + timedelta(days=7)
+        due_date = self.user_borrowed.borrow_date + timedelta(days=3)
         if now() > due_date:
             self.days_late = (now() - due_date).days
             self.fee = self.days_late * 50  # ₹50 per day late

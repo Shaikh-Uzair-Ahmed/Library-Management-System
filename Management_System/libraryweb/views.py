@@ -204,11 +204,14 @@ class HomePageView(ListView):
         lib_num = self.kwargs.get('lib_num', None)
 
         try:
-            library_user = LibraryUser.objects.get(lib_num=lib_num)
-            user = library_user.user
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+            self.user = self.library_user.user
 
-            if not user.is_active:
+            if not self.user.is_active or not self.library_user.is_active:
+                print("User is not active, redirecting to signout")
+                messages.error(self.request, "Your account is inactive. Please sign in again.")
                 return redirect('libraryweb:signout')
+
 
         except LibraryUser.DoesNotExist:
             return redirect('libraryweb:signout')
@@ -247,11 +250,14 @@ class HistoryView(ListView):
         lib_num = self.kwargs.get('lib_num', None)
 
         try:
-            library_user = LibraryUser.objects.get(lib_num=lib_num)
-            user = library_user.user
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+            self.user = self.library_user.user
 
-            if not user.is_active:
+            if not self.user.is_active or not self.library_user.is_active:
+                print("User is not active, redirecting to signout")
+                messages.error(self.request, "Your account is inactive. Please sign in again.")
                 return redirect('libraryweb:signout')
+
 
         except LibraryUser.DoesNotExist:
             return redirect('libraryweb:signout')
@@ -288,9 +294,10 @@ class SearchPageView(ListView):
         try:
             # Fetch the LibraryUser
             self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+            self.user = self.library_user.user
 
             # Check if the user is active
-            if not self.library_user.user.is_active or not self.library_user.is_active:
+            if not self.user.is_active or not self.library_user.is_active:
                 print("User is not active, redirecting to signout")
                 messages.error(self.request, "Your account is inactive. Please sign in again.")
                 return redirect('libraryweb:signout')
@@ -433,12 +440,14 @@ class RequestSuccessView(TemplateView):
         try:
             # Fetch the LibraryUser
             self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+            self.user = self.library_user.user
 
             # Check if the user is active
-            if not self.library_user.user.is_active or not self.library_user.is_active:
+            if not self.user.is_active or not self.library_user.is_active:
+                print("User is not active, redirecting to signout")
                 messages.error(self.request, "Your account is inactive. Please sign in again.")
                 return redirect('libraryweb:signout')
-
+            
         except Exception as e:
             print(f"Error occurred: {e}")
             messages.error(self.request, "An error occurred. Please try again later.")
@@ -461,60 +470,51 @@ class RequestSuccessView(TemplateView):
         return context
 
 def book_request_view(request, lib_num):
-    # Create the form instance
+    # Fetch the LibraryUser and check if the user is active
+    try:
+        # Fetch the LibraryUser instance using lib_num
+        library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+        user = library_user.user  # Assuming LibraryUser has a related User object
+
+        # Check if the user and library user are both active
+        if not user.is_active or not library_user.is_active:
+            print("User is not active, redirecting to signout")
+            messages.error(request, "Your account is inactive. Please sign in again.")
+            return redirect('libraryweb:signout')
+
+    except LibraryUser.DoesNotExist:
+        # Handle case where LibraryUser is not found (you can redirect or show an error)
+        messages.error(request, "User not found.")
+        return redirect('libraryweb:signout')
+
+    # Continue with the book request form processing
     request.session['lib_num'] = lib_num
     if request.method == 'POST':
         form = BookRequestForm(request.POST)
-        
+
         if form.is_valid():
-            # Extract cleaned data from the form
             title = form.cleaned_data['title']
             isbn = form.cleaned_data.get('isbn')
 
-            # Query the database for a book matching the title or ISBN
             try:
-                # Try to get the book from the BookMain model by title or ISBN
                 book = BookMain.objects.get(isbn=isbn)
-                
-                # Redirect to the detail page if the book is found
-                return redirect(reverse('libraryweb:detail', args=[lib_num,book.isbn]))
-            
+                return redirect(reverse('libraryweb:detail', args=[lib_num, book.isbn]))
             except BookMain.DoesNotExist:
-                # If the book is not found, create a Request instance and save it
-                library_user = LibraryUser.objects.get(lib_num=lib_num)
-                
-                # Create a new Request record
                 new_request = Request(
                     user=library_user,
                     isbn=isbn,
                     title=title,
                     author=form.cleaned_data.get('author'),
                 )
-                new_request.save()  # Save the request to the database
-
-                # Redirect to the success page with the ISBN
-                return redirect(reverse('libraryweb:success', args=[lib_num,isbn]))
-        
+                new_request.save()
+                return redirect(reverse('libraryweb:success', args=[lib_num, isbn]))
         else:
-            # If the form is invalid, re-render the form with error messages
             return render(request, 'libraryweb/main/request.html', {'form': form})
 
     else:
-        form = BookRequestForm()  # Empty form for GET request
+        form = BookRequestForm()
 
-    # Check user status before rendering
-    redirect_response = check_user_status(request)
-    if redirect_response:
-        return redirect_response
-
-    # Get lib_num from the session or URL
-    lib_num = request.session.get('lib_num', None)
-
-    # Render the request page with the form and context
-    return render(request, 'libraryweb/main/request.html', {
-        'form': form,
-        'lib_num': lib_num
-    })
+    return render(request, 'libraryweb/main/request.html', {'form': form, 'lib_num': lib_num})
 
 
 
@@ -524,7 +524,27 @@ def book_request_view(request, lib_num):
 
 
 class CreditsView(TemplateView):
-    template_name="libraryweb/main/credits.html"   
+    template_name = "libraryweb/main/credits.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        # Fetch lib_num from URL kwargs
+        lib_num = kwargs.get('lib_num')
+
+        try:
+            # Fetch the LibraryUser
+            self.library_user = get_object_or_404(LibraryUser, lib_num=lib_num)
+
+            # Check if the user is active
+            if not self.library_user.user.is_active or not self.library_user.is_active:
+                messages.error(request, "Your account is inactive. Please sign in again.")
+                return redirect('libraryweb:signout')
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            messages.error(request, "An error occurred. Please try again later.")
+            return redirect('libraryweb:signout')
+
+        return super().dispatch(request, *args, **kwargs)
 
 class SignInView(FormView):
     template_name = 'libraryweb/auth/signin.html'
@@ -613,9 +633,8 @@ def sign_out(request):
         # Set the user's 'is_active' status to False
         user = request.user
         user.is_active = False
-        if hasattr(user, 'library_profile'):
-            user.library_profile.is_active = False
-            user.library_profile.save()
+        user.library_profile.is_active = False
+        user.library_profile.save()
         user.save()
         # Clear the user's session data
         request.session.flush()

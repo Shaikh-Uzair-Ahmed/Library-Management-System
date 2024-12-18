@@ -8,7 +8,7 @@ from datetime import timedelta
 def create_user_history_on_delete(sender, instance, **kwargs):
     borrow_date = instance.borrow_date
     return_date = now()
-    due_date = borrow_date + timedelta(days=7)
+    due_date = borrow_date + timedelta(days=3)
     on_time = return_date <= due_date
 
     UserHistory.objects.create(
